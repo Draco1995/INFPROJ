@@ -1,3 +1,9 @@
+/*
+ * Info project:rikudo
+ * Author: Xinzhi MU, Xiang Chen
+ * 
+ */
+
 package rikudo;
 
 public class Main {
