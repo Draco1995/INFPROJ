@@ -1,3 +1,4 @@
+package Image;
 import java.awt.Color;
 import java.awt.Polygon;
 

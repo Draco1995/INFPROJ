@@ -1,3 +1,4 @@
+package Image;
 import java.awt.Color;
 
 public class testImage2d {

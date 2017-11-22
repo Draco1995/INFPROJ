@@ -1,3 +1,4 @@
+package Image;
 import java.awt.*;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -11,13 +12,14 @@ public class Image2d {
 	private int height; // height of the image
 	private java.util.List<ColoredPolygon> coloredPolygons; // colored polygons in the image
 	private java.util.List<ColoredSegment> coloredSegments; // colored segments in the image
-
+	private java.util.List<ColoredString> coloredString;
 	// Constructor that instantiates an image of a specified width and height
 	public Image2d(int width, int height) {
 		this.width = width;
 		this.height = height;
 		coloredPolygons = Collections.synchronizedList(new LinkedList<ColoredPolygon>());
 		coloredSegments = Collections.synchronizedList(new LinkedList<ColoredSegment>());
+		coloredString = Collections.synchronizedList(new LinkedList<ColoredString>());
 	}
 
 	// Constructor that instantiates an image of a specified size
@@ -26,6 +28,7 @@ public class Image2d {
 		this.height = size;
 		coloredPolygons = Collections.synchronizedList(new LinkedList<ColoredPolygon>());
 		coloredSegments = Collections.synchronizedList(new LinkedList<ColoredSegment>());
+		coloredString = Collections.synchronizedList(new LinkedList<ColoredString>());
 	}
 
 	// Return the width of the image
@@ -47,7 +50,11 @@ public class Image2d {
 	public java.util.List<ColoredSegment> getColoredSegments() {
 		return coloredSegments;
 	}
-
+	
+	public java.util.List<ColoredString> getColoredString(){
+		return coloredString;
+	}
+	
 	// Create the polygon with xcoords, ycoords and colors insideColor, boundaryColor
 	public void addPolygon(int[] xcoords, int[] ycoords, Color insideColor, Color boundaryColor) {
 		coloredPolygons.add(new ColoredPolygon(xcoords, ycoords, insideColor, boundaryColor));
@@ -56,6 +63,10 @@ public class Image2d {
 	// Create the segment from (x1,y1) to (x2,y2) with some given width and color 
 	public void addSegment(int x1, int y1, int x2, int y2, int width, Color color) {
 		coloredSegments.add(new ColoredSegment(x1, y1, x2, y2, width, color));
+	}
+	
+	public void addString(String str, int x, int y, Color color,int fontSize) {
+		coloredString.add(new ColoredString(str,x,y,color,fontSize));
 	}
 	
 	// Clear the picture
@@ -118,6 +129,14 @@ class Image2dComponent extends JComponent {
 				g2.setColor(coloredSegment.color);
 				g2.setStroke(new BasicStroke(coloredSegment.width));
 				g2.drawLine(coloredSegment.x1, coloredSegment.y1, coloredSegment.x2, coloredSegment.y2);
+			}
+		}
+		
+		synchronized (img.getColoredString()){
+			for(ColoredString coloredString: img.getColoredString()){
+				g2.setColor(coloredString.color);
+				g2.setFont(new Font("TimesRoman", Font.BOLD+Font.ITALIC,coloredString.fontSize));
+				g2.drawString(coloredString.str,coloredString.x,coloredString.y);
 			}
 		}
 	}
