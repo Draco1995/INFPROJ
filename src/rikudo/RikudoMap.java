@@ -58,7 +58,7 @@ public class RikudoMap {
             e.printStackTrace();  
         }  
 	}
-	public void checkMapAvailable(){
+	public void checkMapAvailability(){
 		for(Cell i :cellList){
 			if(i==null) continue;
 			int[] nb = i.getNearbyCells();
@@ -175,10 +175,10 @@ public class RikudoMap {
 		}else{
 			Cell c = cellList[trace[step]];
 			int[] availableCells;
-			if(c.getDiamandNumbers()==0){
+			if(c.getDiamondNumbers()==0){
 				availableCells = c.getNearbyCells();
 			}else{
-				availableCells = c.getDiamand();
+				availableCells = c.getDiamond();
 			}
 			for(int i : availableCells){
 				if(i==0) continue;

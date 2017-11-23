@@ -9,12 +9,12 @@ package rikudo;
 
 public class Main {
 	static String path = "resource/b.txt";
-	static int sideLength = 40;
+	static int sideLength = 30;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		RikudoMap rm = new RikudoMap();
 		rm.readFile(path);
-		rm.checkMapAvailable();
+		rm.checkMapAvailability();
 		rm.printMap(sideLength);
 		rm.backtracking();
 		rm.printMap(sideLength);

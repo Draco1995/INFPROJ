@@ -30,9 +30,9 @@ public class Cell {
 	private final int number;
 	//the number of available edges;
 	private int availableEdges;
-	private int[] diamand = new int[2];
-	private int diamandNumbers = 0;
-	private int diamandNumbersMax = 0;
+	private int[] diamond = new int[2];
+	private int diamondNumbers = 0;
+	private int diamondNumbersMax = 0;
 	private static int paintAjustX = 0;
 	private static int paintAjustY = 0;
 	private int positionX = 0;
@@ -62,15 +62,15 @@ public class Cell {
 		passFlag = false;
 	}
 	public void connect(int number){
-		diamand[diamandNumbers] = number;
-		diamandNumbers++;
-		diamandNumbersMax = diamandNumbers;
+		diamond[diamondNumbers] = number;
+		diamondNumbers++;
+		diamondNumbersMax = diamondNumbers;
 	}
-	public int getDiamandNumbers(){
-		return diamandNumbers;
+	public int getDiamondNumbers(){
+		return diamondNumbers;
 	}
-	public int[] getDiamand(){
-		return diamand;
+	public int[] getDiamond(){
+		return diamond;
 	}
 	public int[] getNearbyCells(){
 		return nearbyCells;
@@ -189,8 +189,8 @@ public class Cell {
 			return false;
 		}
 		//if this cell has two diamonds, thats means the previous must be one of given cells
-		if(diamandNumbersMax==2){
-			if(diamand[0]!=previousCell&&diamand[1]!=previousCell){
+		if(diamondNumbersMax==2){
+			if(diamond[0]!=previousCell&&diamond[1]!=previousCell){
 				return false;
 			}
 		}
@@ -206,8 +206,8 @@ public class Cell {
 	public void avance(int step,Cell[] cellList){
 		passFlag = true;
 		label = step+1;
-		if(diamandNumbers!=0)
-			diamandNumbers--;
+		if(diamondNumbers!=0)
+			diamondNumbers--;
 		for(int i:nearbyCells){
 			if(i==0) continue;
 			cellList[i].addAvailableEgde();
@@ -224,8 +224,8 @@ public class Cell {
 		if(display==false){
 			label = 0;
 		}
-		if(diamandNumbers<diamandNumbersMax){
-			diamandNumbers++;
+		if(diamondNumbers<diamondNumbersMax){
+			diamondNumbers++;
 		}
 		for(int i:nearbyCells){
 			if(i==0) continue;
