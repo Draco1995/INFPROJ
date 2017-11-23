@@ -73,6 +73,7 @@ public class Image2d {
 	public void clear() {
 		coloredPolygons = Collections.synchronizedList(new LinkedList<ColoredPolygon>());
 		coloredSegments = Collections.synchronizedList(new LinkedList<ColoredSegment>());
+		coloredString = Collections.synchronizedList(new LinkedList<ColoredString>());
 	}
 }
 

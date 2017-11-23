@@ -101,10 +101,10 @@ public class Cell {
 		
 	}
 	public void ajust(int sideLength){
-		while(positionX+paintAjustX*0.866<=0){
+		while(positionX+paintAjustX-sideLength<=0){
 			paintAjustX+=sideLength;
 		}
-		while(positionY+paintAjustY<=0){
+		while(positionY+paintAjustY-sideLength<=0){
 			paintAjustY+=sideLength;
 		}
 	}
@@ -121,7 +121,7 @@ public class Cell {
 	public int getPositionY(){
 		return positionY;
 	}
-	public void paint(Image2d img,int sl,boolean flag){
+	public void paint(Image2d img,int sl,boolean flag,Cell[] cellList){
 		int x = positionX+paintAjustX;
 		int y = positionY+paintAjustY;
 		int sll = Math.toIntExact( Math.round( sl*0.866 ));
@@ -150,15 +150,6 @@ public class Cell {
 		}
 		
 		img.addString(""+number, x-sl/8, y-sl/3*2+sl/8, Color.GRAY,sl/4);
-		if(label==0){
-			return;
-		}
-		if(display==true){
-			img.addString(""+label, x-sl/4, y+sl/4, Color.black,sl/2);
-		}else{
-			img.addString(""+label, x-sl/4, y+sl/4, Color.cyan,sl/2);
-		}
-		
 		if(flag==true){
 			sl = sl*9/10;
 			sll = sll*9/10;
@@ -172,6 +163,29 @@ public class Cell {
 							Math.toIntExact( Math.round( y+sl*0.5 ))
 							}, 
 					Color.ORANGE, Color.BLACK);
+		}
+		
+		for(int i = 0;i<diamondNumbersMax;i++){
+			Cell c = cellList[diamond[i]];
+			int vecteurX = c.getPositionX()-positionX;
+			int vecteurY = c.getPositionY()-positionY;
+			vecteurX /= 10;
+			vecteurY /= 10;
+			int centerX = (c.getPositionX()+positionX)/2+paintAjustX;
+			int centerY = (c.getPositionY()+positionY)/2+paintAjustY;
+			img.addPolygon(new int[] {centerX-vecteurX,centerX-vecteurY,centerX+vecteurY}, 
+					new int[] { centerY-vecteurY,centerY+vecteurX,centerY-vecteurX
+							}, 
+					Color.BLACK, Color.BLACK);
+		}
+		
+		if(label==0){
+			return;
+		}
+		if(display==true){
+			img.addString(""+label, x-sl/4, y+sl/4, Color.black,sl/2);
+		}else{
+			img.addString(""+label, x-sl/4, y+sl/4, Color.cyan,sl/2);
 		}
 	}
 	public int getLabel(){
