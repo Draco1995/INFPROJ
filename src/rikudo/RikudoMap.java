@@ -102,9 +102,9 @@ public class RikudoMap {
 		Image2d img = new Image2d(700);
 		ajust(sideLength);
 		for(int i=0;i<cellNumbers;i++){
-			cellList[i+1].paint(img, sideLength,false);
+			cellList[i+1].paint(img, sideLength,false,cellList);
 			if(cellList[i+1].getLabel()==start||cellList[i+1].getLabel()==end){
-				cellList[i+1].paint(img, sideLength,true);
+				cellList[i+1].paint(img, sideLength,true,cellList);
 			}
 		}
 		Show.show(img);
