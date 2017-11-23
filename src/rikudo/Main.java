@@ -8,7 +8,7 @@ package rikudo;
 
 
 public class Main {
-	static String path = "resource/a.txt";
+	static String path = "resource/b.txt";
 	static int sideLength = 30;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub

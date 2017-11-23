@@ -69,7 +69,7 @@ public class RikudoMap {
             	str = reader.readLine();
             	s = str.split(" ");
             	PI pi;
-            	if(s[0].equals("p")){
+            	if(s[1].equals("p")){
             		pi = PI.PAIR;
             	}else{
             		pi = PI.IMPAIR;
@@ -174,15 +174,16 @@ public class RikudoMap {
 	public void backtracking(){
 		//java.util.LinkedList<Integer> queue = new LinkedList<Integer>();
 		int[] trace = new int[cellNumbers+1];
+		java.util.LinkedList<Integer> UNOList = new LinkedList<Integer>();
 		trace[1] = innerStart;
 		int step = 1;
 		flag = false;
-		DFS(step,trace);
+		DFS(step,trace,UNOList);
 		for(int i:trace){
 			System.out.print(i+" ");
 		}
 	}
-	public void DFS(int step,int[] trace){
+	public void DFS(int step,int[] trace,java.util.LinkedList<Integer> UNOList){
 		if(flag ==true){
 			return;
 		}
@@ -207,17 +208,17 @@ public class RikudoMap {
 			for(int i : availableCells){
 				if(i==0) continue;
 				Cell cnext = cellList[i];
-				if(cnext.check(step,trace[step])==true){
-					cnext.avance(step,cellList);
+				if(cnext.check(step,trace[step],UNOList,cellList)==true){
+					cnext.avance(step,cellList,UNOList);
 					step++;
 					trace[step] = i;
-					DFS(step,trace);
+					DFS(step,trace,UNOList);
 					if(flag == true){
 						return;
 					}
 					trace[step] = 0;
 					step--;
-					cnext.retreat(step,cellList);
+					cnext.retreat(step,cellList,UNOList);
 				}
 			}
 		}

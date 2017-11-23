@@ -85,10 +85,7 @@ public class Image2d {
 		coloredPolygons = Collections.synchronizedList(new LinkedList<ColoredPolygon>());
 		coloredSegments = Collections.synchronizedList(new LinkedList<ColoredSegment>());
 		coloredString = Collections.synchronizedList(new LinkedList<ColoredString>());
-<<<<<<< HEAD
 		coloredCircle = Collections.synchronizedList(new LinkedList<ColoredCircle>());
-=======
->>>>>>> master
 	}
 }
 
@@ -159,7 +156,7 @@ class Image2dComponent extends JComponent {
 		synchronized (img.getColoredCircle()){
 			for(ColoredCircle coloredCircle: img.getColoredCircle()){
 				g2.setColor(coloredCircle.color);
-				g2.drawOval(coloredCircle.x, coloredCircle.y, coloredCircle.r, coloredCircle.r);
+				g2.fillOval(coloredCircle.x, coloredCircle.y, coloredCircle.r, coloredCircle.r);
 			}
 		}
 	}

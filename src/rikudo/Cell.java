@@ -168,7 +168,7 @@ public class Cell {
 							}, 
 					Color.ORANGE, Color.BLACK);
 		}
-		
+		//PaintDiamond
 		for(int i = 0;i<diamondNumbersMax;i++){
 			Cell c = cellList[diamond[i]];
 			int vecteurX = c.getPositionX()-positionX;
@@ -182,7 +182,8 @@ public class Cell {
 							}, 
 					Color.BLACK, Color.BLACK);
 		}
-		
+		if(flagUNO==true)this.paintUNO(img,sl);
+		if(flagPI!=PI.OFF)this.paintPI(img,sl);
 		if(label==0){
 			return;
 		}
@@ -192,11 +193,36 @@ public class Cell {
 			img.addString(""+label, x-sl/4, y+sl/4, Color.cyan,sl/2);
 		}
 	}
+	private void paintUNO(Image2d img,int sl){
+		int x = positionX+paintAjustX;
+		int y = positionY+paintAjustY;
+		int sll = Math.toIntExact( Math.round( sl*0.433));
+		img.addPolygon(new int[] {x,x-sll,x+sll}, 
+				new int[] {y-sl,y-sl*3/4,y-sl*3/4}, 
+				Color.BLACK, Color.BLACK);
+		img.addPolygon(new int[] {x,x-sll,x+sll}, 
+				new int[] {y+sl,y+sl*3/4,y+sl*3/4}, 
+				Color.BLACK, Color.BLACK);
+	}
+	private void paintPI(Image2d img,int sl){
+		int x = positionX+paintAjustX;
+		int y = positionY+paintAjustY;
+		int sll = Math.toIntExact( Math.round( sl*0.433));
+		if(flagPI==PI.IMPAIR){
+			img.addCircle(x-sl/12, y+sl*3/4-sl/12, sl/6, Color.black);
+			img.addCircle(x-sl/12, y-sl*3/4-sl/12, sl/6, Color.black);
+		}else{
+			img.addCircle(x-sll/3-sl/12, y+sl*3/4-sl/12, sl/6, Color.black);
+			img.addCircle(x+sll/3-sl/12, y-sl*3/4-sl/12, sl/6, Color.black);
+			img.addCircle(x+sll/3-sl/12, y+sl*3/4-sl/12, sl/6, Color.black);
+			img.addCircle(x-sll/3-sl/12, y-sl*3/4-sl/12, sl/6, Color.black);
+		}
+	}
 	public int getLabel(){
 		return label;
 	}
 	//Check if this cell is available
-	public boolean check(int step,int previousCell){
+	public boolean check(int step,int previousCell,java.util.LinkedList<Integer> UNOList,Cell[] cellList){
 		step++;
 		//if passed before
 		if(passFlag == true){
@@ -212,6 +238,18 @@ public class Cell {
 				return false;
 			}
 		}
+		
+		//Check UNO
+		if(flagUNO==true&&UNOList.isEmpty()==false){
+			int f = (cellList[UNOList.getFirst()].getLabel())%10;
+			if(f!=(step%10)){
+				return false;
+			}
+		}
+		//Check PI
+		if((step%2==1&&flagPI==PI.PAIR)||(step%2==0&&flagPI==PI.IMPAIR)){
+			return false;
+		}
 		return true;
 	}
 	public boolean check(){
@@ -221,7 +259,7 @@ public class Cell {
 		}
 		return true;
 	}
-	public void avance(int step,Cell[] cellList){
+	public void avance(int step,Cell[] cellList,java.util.LinkedList<Integer> UNOList){
 		passFlag = true;
 		label = step+1;
 		if(diamondNumbers!=0)
@@ -230,6 +268,10 @@ public class Cell {
 			if(i==0) continue;
 			cellList[i].addAvailableEgde();
 		}
+		//UNO
+		if(flagUNO==true){
+			UNOList.push(number);
+		}
 	}
 	public void addAvailableEgde(){
 		availableEdges++;
@@ -237,7 +279,7 @@ public class Cell {
 	public void minusAvailableEgde(){
 		availableEdges--;
 	}
-	public void retreat(int step,Cell[] cellList){
+	public void retreat(int step,Cell[] cellList,java.util.LinkedList<Integer> UNOList){
 		passFlag = false;
 		if(display==false){
 			label = 0;
@@ -249,7 +291,12 @@ public class Cell {
 			if(i==0) continue;
 			cellList[i].minusAvailableEgde();
 		}
-		
+		if(flagUNO==true){
+			int f = UNOList.pop();
+			if(f!=number){
+				System.out.println("ERROR");
+			}
+		}
 	}
 	public int getAvailableEdges(){
 		return availableEdges;
