@@ -45,6 +45,7 @@ public class RikudoMap {
             		innerEnd = Integer.parseInt(s[0]);
             	}
             }
+            //diamond
             str = reader.readLine();
             int n = Integer.parseInt(str);
             for(int i=1;i<=n;i++){
@@ -53,6 +54,29 @@ public class RikudoMap {
             	cellList[Integer.parseInt(s[0])].connect(Integer.parseInt(s[1]));
             	cellList[Integer.parseInt(s[1])].connect(Integer.parseInt(s[0]));
             }
+            //UNO
+            str = reader.readLine();
+            n = Integer.parseInt(str);
+            for(int i=1;i<=n;i++){
+            	str = reader.readLine();
+            	cellList[Integer.parseInt(str)].setUNO();
+            }
+            
+            //PI
+            str = reader.readLine();
+            n = Integer.parseInt(str);
+            for(int i=1;i<=n;i++){
+            	str = reader.readLine();
+            	s = str.split(" ");
+            	PI pi;
+            	if(s[0].equals("p")){
+            		pi = PI.PAIR;
+            	}else{
+            		pi = PI.IMPAIR;
+            	}
+            	cellList[Integer.parseInt(s[0])].setPI(pi);
+            }
+            
             is.close();  
         } catch (Exception e) {  
             e.printStackTrace();  

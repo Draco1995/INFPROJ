@@ -38,6 +38,8 @@ public class Cell {
 	private int positionX = 0;
 	private int positionY = 0;
 	private boolean passFlag = false;
+	private boolean flagUNO = false;
+	private PI flagPI;
 	Cell(int number,int left,int upperLeft,int upperRight,int right,int lowerRight,int lowerLeft, int label){
 		i_number++;
 		this.number = number;
@@ -60,6 +62,8 @@ public class Cell {
 			display = false;
 		}
 		passFlag = false;
+		flagUNO = false;
+		flagPI = PI.OFF;
 	}
 	public void connect(int number){
 		diamond[diamondNumbers] = number;
@@ -236,4 +240,17 @@ public class Cell {
 	public int getAvailableEdges(){
 		return availableEdges;
 	}
+	
+	public void setUNO(){
+		flagUNO = true;
+	}
+	
+	public void setPI(PI pi){
+		flagPI = pi;
+	}
 }
+
+enum PI {
+	OFF,PAIR,IMPAIR;
+}
+

@@ -13,6 +13,7 @@ public class Image2d {
 	private java.util.List<ColoredPolygon> coloredPolygons; // colored polygons in the image
 	private java.util.List<ColoredSegment> coloredSegments; // colored segments in the image
 	private java.util.List<ColoredString> coloredString;
+	private java.util.List<ColoredCircle> coloredCircle;
 	// Constructor that instantiates an image of a specified width and height
 	public Image2d(int width, int height) {
 		this.width = width;
@@ -20,6 +21,7 @@ public class Image2d {
 		coloredPolygons = Collections.synchronizedList(new LinkedList<ColoredPolygon>());
 		coloredSegments = Collections.synchronizedList(new LinkedList<ColoredSegment>());
 		coloredString = Collections.synchronizedList(new LinkedList<ColoredString>());
+		coloredCircle = Collections.synchronizedList(new LinkedList<ColoredCircle>());
 	}
 
 	// Constructor that instantiates an image of a specified size
@@ -29,6 +31,7 @@ public class Image2d {
 		coloredPolygons = Collections.synchronizedList(new LinkedList<ColoredPolygon>());
 		coloredSegments = Collections.synchronizedList(new LinkedList<ColoredSegment>());
 		coloredString = Collections.synchronizedList(new LinkedList<ColoredString>());
+		coloredCircle = Collections.synchronizedList(new LinkedList<ColoredCircle>());
 	}
 
 	// Return the width of the image
@@ -55,6 +58,10 @@ public class Image2d {
 		return coloredString;
 	}
 	
+	public java.util.List<ColoredCircle> getColoredCircle(){
+		return coloredCircle;
+	}
+	
 	// Create the polygon with xcoords, ycoords and colors insideColor, boundaryColor
 	public void addPolygon(int[] xcoords, int[] ycoords, Color insideColor, Color boundaryColor) {
 		coloredPolygons.add(new ColoredPolygon(xcoords, ycoords, insideColor, boundaryColor));
@@ -69,10 +76,16 @@ public class Image2d {
 		coloredString.add(new ColoredString(str,x,y,color,fontSize));
 	}
 	
+	public void addCircle(int x,int y,int r,Color color){
+		coloredCircle.add(new ColoredCircle(x,y,r,color));
+	}
+	
 	// Clear the picture
 	public void clear() {
 		coloredPolygons = Collections.synchronizedList(new LinkedList<ColoredPolygon>());
 		coloredSegments = Collections.synchronizedList(new LinkedList<ColoredSegment>());
+		coloredString = Collections.synchronizedList(new LinkedList<ColoredString>());
+		coloredCircle = Collections.synchronizedList(new LinkedList<ColoredCircle>());
 	}
 }
 
@@ -137,6 +150,13 @@ class Image2dComponent extends JComponent {
 				g2.setColor(coloredString.color);
 				g2.setFont(new Font("TimesRoman", Font.BOLD+Font.ITALIC,coloredString.fontSize));
 				g2.drawString(coloredString.str,coloredString.x,coloredString.y);
+			}
+		}
+		
+		synchronized (img.getColoredCircle()){
+			for(ColoredCircle coloredCircle: img.getColoredCircle()){
+				g2.setColor(coloredCircle.color);
+				g2.drawOval(coloredCircle.x, coloredCircle.y, coloredCircle.r, coloredCircle.r);
 			}
 		}
 	}
