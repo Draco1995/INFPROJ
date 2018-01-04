@@ -55,20 +55,45 @@ public class Cell {
 				availableEdges++;
 			}
 		}
+		passFlag = false;
+		flagUNO = false;
+		flagPI = PI.OFF;
 		this.label = label;
 		if(label!=0){
 			display = true;
 		}else{
 			display = false;
 		}
-		passFlag = false;
-		flagUNO = false;
-		flagPI = PI.OFF;
+	}
+	Cell(int number,int left,int upperLeft,int upperRight,int right,int lowerRight,int lowerLeft){
+		this(number,left,upperLeft,upperRight,right,lowerRight,lowerLeft, 0);
+
+	}
+	public void setLabel(int label){
+		this.label = label;
+		display = true;
+	}
+	public void unsetLabel(){
+		this.label = 0;
+		display = false;
 	}
 	public void connect(int number){
 		diamond[diamondNumbers] = number;
 		diamondNumbers++;
 		diamondNumbersMax = diamondNumbers;
+	}
+	public void disconnect(int number){
+		if(diamondNumbers == 2){
+			if(diamond[0]==number){
+				diamond[0] = diamond[1];
+			}
+			diamondNumbers--;
+			diamondNumbersMax = 1;
+		}else{
+			diamondNumbers = 0;
+			diamondNumbersMax = 0;
+		}
+
 	}
 	public int getDiamondNumbers(){
 		return diamondNumbers;
@@ -306,12 +331,16 @@ public class Cell {
 		flagUNO = true;
 	}
 	
+	public void unsetUNO(){
+		flagUNO = false;
+	}
+	
 	public void setPI(PI pi){
 		flagPI = pi;
 	}
-}
-
-enum PI {
-	OFF,PAIR,IMPAIR;
+	
+	public void unsetPI(PI pi){
+		flagPI = PI.OFF;
+	}
 }
 

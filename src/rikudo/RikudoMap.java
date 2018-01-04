@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.Random;
 public class RikudoMap {
 	private Cell[] cellList;
 	private int cellNumbers;
@@ -20,6 +21,13 @@ public class RikudoMap {
 	private int innerEnd;
 	private int[] checkPoints;
 	private boolean flag;
+	private int sideLength;
+	private int numberOfSolutionsFound;
+	private boolean[] hash;
+	LinkedList<Constraint> constraintList = new LinkedList<Constraint>();
+	RikudoMap(int sideLength){
+		this.sideLength = sideLength;
+	}
 	public void readFile(String path){
         try {  
             InputStream is = new FileInputStream(path);  
@@ -33,38 +41,67 @@ public class RikudoMap {
             String[] s = str.split(" ");
             start = Integer.parseInt(s[0]);
             end = Integer.parseInt(s[1]);
+            //Create Cells
             for(int i=1;i<=cellNumbers;i++){
             	str = reader.readLine();
             	s = str.split(" ");
-            	cellList[Integer.parseInt(s[0])] = new Cell(Integer.parseInt(s[0]),Integer.parseInt(s[1]),Integer.parseInt(s[2]),Integer.parseInt(s[3]),Integer.parseInt(s[4]),Integer.parseInt(s[5]),Integer.parseInt(s[6]),Integer.parseInt(s[7]));
+            	cellList[Integer.parseInt(s[0])] = new Cell(Integer.parseInt(s[0]),Integer.parseInt(s[1]),Integer.parseInt(s[2]),Integer.parseInt(s[3]),Integer.parseInt(s[4]),Integer.parseInt(s[5]),Integer.parseInt(s[6]));
+            	/*
             	checkPoints[Integer.parseInt(s[7])]=Integer.parseInt(s[0]);
             	if(Integer.parseInt(s[7])==start){
             		innerStart = Integer.parseInt(s[0]);
             	}
             	if(Integer.parseInt(s[7])==end){
             		innerEnd = Integer.parseInt(s[0]);
-            	}
+            	}*/
             }
-            //diamond
+            //Label
             str = reader.readLine();
             int n = Integer.parseInt(str);
+            LabelConstraint.checkPoints = checkPoints;
+            LabelConstraint.cellList = cellList;
             for(int i=1;i<=n;i++){
             	str = reader.readLine();
             	s = str.split(" ");
+            	if(Integer.parseInt(s[1])==start){
+            		innerStart = Integer.parseInt(s[0]);
+            	}
+            	if(Integer.parseInt(s[1])==end){
+            		innerEnd = Integer.parseInt(s[0]);
+            	}
+            	LabelConstraint lc = new LabelConstraint(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
+            	constraintList.add(lc);
+            }
+            //diamond
+            str = reader.readLine();
+            n = Integer.parseInt(str);
+            DiamondConstraint.cellList = cellList;
+            for(int i=1;i<=n;i++){
+            	str = reader.readLine();
+            	s = str.split(" ");
+            	DiamondConstraint dc = new DiamondConstraint(Integer.parseInt(s[0]),Integer.parseInt(s[1]));
+            	constraintList.add(dc);
+            	
+            	/*
             	cellList[Integer.parseInt(s[0])].connect(Integer.parseInt(s[1]));
             	cellList[Integer.parseInt(s[1])].connect(Integer.parseInt(s[0]));
+            	*/
             }
             //UNO
             str = reader.readLine();
             n = Integer.parseInt(str);
+            UNOConstraint.cellList = cellList;
             for(int i=1;i<=n;i++){
             	str = reader.readLine();
-            	cellList[Integer.parseInt(str)].setUNO();
+            	UNOConstraint uc = new UNOConstraint(Integer.parseInt(str));
+            	constraintList.add(uc);
+            	//cellList[Integer.parseInt(str)].setUNO();
             }
             
             //PI
             str = reader.readLine();
             n = Integer.parseInt(str);
+            PIConstraint.cellList = cellList;
             for(int i=1;i<=n;i++){
             	str = reader.readLine();
             	s = str.split(" ");
@@ -74,13 +111,24 @@ public class RikudoMap {
             	}else{
             		pi = PI.IMPAIR;
             	}
-            	cellList[Integer.parseInt(s[0])].setPI(pi);
+            	PIConstraint pc = new PIConstraint(Integer.parseInt(s[0]),pi);
+            	constraintList.add(pc);
+            	//cellList[Integer.parseInt(s[0])].setPI(pi);
             }
-            
             is.close();  
         } catch (Exception e) {  
             e.printStackTrace();  
         }  
+	}
+	public void applyConstraints(){
+		for(Constraint c:constraintList){
+        	c.set();
+        }
+	}
+	public void removeConstraints(){
+		for(Constraint c:constraintList){
+        	c.unset();
+        }
 	}
 	public void checkMapAvailability(){
 		for(Cell i :cellList){
@@ -95,9 +143,10 @@ public class RikudoMap {
 		}
 	}
 	public void printMap(int sideLength){
+		/*
 		for(int i=0;i<cellNumbers;i++){
 			System.out.println(cellList[i+1]);
-		}
+		}*/
 		//To ajust the map
 		Image2d img = new Image2d(700);
 		ajust(sideLength);
@@ -178,9 +227,17 @@ public class RikudoMap {
 		trace[1] = innerStart;
 		int step = 1;
 		flag = false;
+		numberOfSolutionsFound = 0;
 		DFS(step,trace,UNOList);
-		for(int i:trace){
+		/*for(int i:trace){
 			System.out.print(i+" ");
+		}*/
+		if(numberOfSolutionsFound == 0){
+			System.out.println("No solution!");
+		}else if(numberOfSolutionsFound == 1){
+			System.out.println("1 solution found");
+		}else{
+			System.out.println("At least 2 solutions");
 		}
 	}
 	public void DFS(int step,int[] trace,java.util.LinkedList<Integer> UNOList){
@@ -188,7 +245,15 @@ public class RikudoMap {
 			return;
 		}
 		if(trace[step]==innerEnd && step == cellNumbers){
-			flag = true;
+			if(numberOfSolutionsFound==0){
+				this.printMap(sideLength);
+				numberOfSolutionsFound++;
+			}else{
+				flag = true;
+				numberOfSolutionsFound++;
+				this.printMap(sideLength);
+			}
+			
 			return;
 		}
 		if(checkStatus(trace,step)==false){
@@ -245,5 +310,58 @@ public class RikudoMap {
 			}
 		}
 		return true;
+	}
+	public static int[] createRandomSeries(int[] n,Random random){
+		int len = n.length;
+		for(int i=0;i<len;i++){
+			int a = random.nextInt(len);
+			int b = random.nextInt(len);
+			int c = n[a];
+			n[a] = n[b];
+			n[b] = c;
+		}
+		return n;
+	}
+	public void createPuzzle(){
+		Random random = new Random();
+		int[] series = new int[cellNumbers+1];
+		int start = random.nextInt(cellNumbers)+1;
+		int step = 1;
+		series[1] = start;
+		flag = false;
+		hash = new boolean[cellNumbers+1];
+		CDFS(series,step,start,random);
+		for(int i:series){
+			System.out.print(i+" ");
+		}
+		
+	}
+	public void CDFS(int[] series,int step, int cell,Random random){
+		for(int i:series){
+			System.out.print(i+" ");
+		}System.out.println();
+		if(flag == true){
+			return;
+		}else if(step==cellNumbers){
+			flag = true;
+			return;
+		}else{
+			int[] nearbyCells = cellList[cell].getNearbyCells();
+			int[] nc = nearbyCells.clone();
+			nc = createRandomSeries(nc,random);
+			for(int c:nc){
+				if(c==0) continue;
+				if(hash[c]==false){
+					hash[c] = true;
+					step++;
+					series[step] = c;
+					CDFS(series,step,c,random);
+					if(flag == true) return;
+					series[step] = 0;
+					step--;
+					hash[c] = false;
+				}
+			}
+		}
 	}
 }
