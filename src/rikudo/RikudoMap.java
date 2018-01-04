@@ -1,5 +1,9 @@
 package rikudo;
-
+import org.sat4j.core.VecInt;
+import org.sat4j.minisat.SolverFactory;
+import org.sat4j.specs.ISolver;
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.TimeoutException;
 import Image.ColoredPolygon;
 import Image.ColoredSegment;
 import Image.Image2d;
@@ -32,7 +36,9 @@ public class RikudoMap {
             str = reader.readLine();
             String[] s = str.split(" ");
             start = Integer.parseInt(s[0]);
+            
             end = Integer.parseInt(s[1]);
+            
             for(int i=1;i<=cellNumbers;i++){
             	str = reader.readLine();
             	s = str.split(" ");
@@ -45,6 +51,7 @@ public class RikudoMap {
             		innerEnd = Integer.parseInt(s[0]);
             	}
             }
+            //System.out.println(innerEnd);
             str = reader.readLine();
             int n = Integer.parseInt(str);
             for(int i=1;i<=n;i++){
@@ -220,5 +227,115 @@ public class RikudoMap {
 			}
 		}
 		return true;
+	}
+	
+	public void SAT(){
+		int n = this.cellNumbers;
+		ISolver solver = SolverFactory.newDefault();
+		try {
+			//each vertex appears once
+			int[] Clause1 = new int[n];
+			for (int i = 1; i <= n; i++){				
+				for (int j = 0; j < n; j++){
+					Clause1[j] = i*n+j+1;
+				}
+				solver.addClause(new VecInt(Clause1));
+			}
+			
+			for (int i = 1; i <= n; i++){
+				for (int j = 1; j <= n; j++){
+					for (int k = j+1; k <= n; k++){
+						solver.addClause(new VecInt(new int[] {-(i*n+j),-(i*n+k)}));
+					}
+				}
+			}
+			
+			//each index is occupied once
+			int[] Clause2 = new int[n];
+			for (int i = 1; i <= n; i++){				
+				for (int j = 0; j < n; j++){
+					Clause2[j] = (j+1)*n+i;
+				}
+				solver.addClause(new VecInt(Clause2));
+			}
+			for (int i = 1; i <= n; i++){
+				for (int j = 1; j <= n; j++){
+					for (int k = j+1; k <= n; k++){
+						solver.addClause(new VecInt(new int[] {-(j*n+i),-(k*n+i)}));
+					}
+				}
+			}
+			
+			//cells with labels
+			for (int i = 1; i <= n ; i++){
+				Cell c = cellList[i];
+				if (c.getLabel()>0){
+					solver.addClause(new VecInt(new int[] {(i*n+c.getLabel())}));
+				}
+			}
+			
+			//consecutive vertices are adjacent
+			for (int i = 1; i <= n; i++){
+				Cell c = cellList[i];
+				int[] Near = c.getNearbyCells();
+			Loop:
+				for (int j = 1; j<=n; j++){
+					for (int k = 0; k<6; k++){
+						if (j==Near[k]){
+							continue Loop;
+						}
+					}
+					for (int l = 1; l <=n; l++){
+						solver.addClause(new VecInt(new int[] {-(i*n+l),-(j*n+l+1)}));
+					}
+				}
+			}
+			
+			//diamond
+			for (int i = 1; i <= n; i++){
+				Cell c = cellList[i];
+				int num = c.getDiamondNumbers();
+				if (num!=0){
+					for (int k = 0; k < num; k++){
+						int a = c.getDiamond()[k];
+						solver.addClause(new VecInt(new int[] {-(a*n+1),i*n+2}));
+						for (int j = 2; j < n; j++){
+							solver.addClause(new VecInt(new int[] {i*n+j-1,-(a*n+j),i*n+j+1}));
+						}
+						solver.addClause(new VecInt(new int[] {-(a*n+n),i*n+n-1}));
+					}
+				}
+				
+			}
+		}catch (ContradictionException e1) {
+			e1.printStackTrace();
+		}
+		
+		try {
+			if (solver.isSatisfiable()) {
+				//System.out.println("Satisfiable problem!");
+				int[] solution = solver.model();
+				/*System.out.print("Solution: " + solution[0]);
+				for (int i = 1; i<n*n; i++){
+					System.out.print(" " + solution[i]);
+				}*/
+				int[] finalLabels = new int[n+1];
+				int counter = 0;
+				for (int i : solution){
+					if (i>0){
+						counter++;
+						finalLabels[counter] = i-counter*n;
+					}
+				}
+				for (int i = 1; i <=n; i++){
+					Cell c = cellList[i];
+					c.changeLabel(finalLabels[i]);
+				}
+			} else {
+				System.out.println("Unsatisfiable problem!");
+			}
+		} catch (TimeoutException e) {
+			System.out.println("Timeout, sorry!");
+		}
 	}
 }
