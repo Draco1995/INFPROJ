@@ -330,6 +330,7 @@ public class RikudoMap {
 		series[1] = start;
 		flag = false;
 		hash = new boolean[cellNumbers+1];
+		hash[start] = true;
 		CDFS(series,step,start,random);
 		for(int i:series){
 			System.out.print(i+" ");
@@ -337,9 +338,9 @@ public class RikudoMap {
 		
 	}
 	public void CDFS(int[] series,int step, int cell,Random random){
-		for(int i:series){
+		/*for(int i:series){
 			System.out.print(i+" ");
-		}System.out.println();
+		}System.out.println();*/
 		if(flag == true){
 			return;
 		}else if(step==cellNumbers){
@@ -352,6 +353,7 @@ public class RikudoMap {
 			for(int c:nc){
 				if(c==0) continue;
 				if(hash[c]==false){
+					if(CBFS(step,c)==false) continue;
 					hash[c] = true;
 					step++;
 					series[step] = c;
@@ -363,5 +365,30 @@ public class RikudoMap {
 				}
 			}
 		}
+	}
+	private boolean CBFS(int step,int start){
+		if(step == cellNumbers-1){
+			step = step;
+		}
+		boolean[] BFShash = hash.clone();
+		LinkedList<Integer> queue = new LinkedList<Integer>();
+		queue.add(start);
+		BFShash[start] = true;
+		step++;
+		while(queue.isEmpty()==false){
+			int c = queue.pop();
+			int[] nearbyCells = cellList[c].getNearbyCells();
+			for(int i:nearbyCells){
+				if(BFShash[i]==false&&i!=0){
+					BFShash[i]=true;
+					queue.add(i);
+					step++;
+				}
+			}
+		}
+		if(step==cellNumbers)
+			return true;
+		else
+			return false;
 	}
 }
