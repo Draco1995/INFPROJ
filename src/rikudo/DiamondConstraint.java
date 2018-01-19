@@ -11,12 +11,23 @@ public class DiamondConstraint extends Constraint{
 	}
 	@Override
 	public void set(){
-		cellList[a].connect(b);
-    	cellList[b].connect(a);
+		status = true;
+			cellList[a].connect(b);
+			cellList[b].connect(a);
 	}
 	@Override
 	public void unset(){
+		status = false;
 		cellList[a].disconnect(b);
 		cellList[b].disconnect(a);
+	}
+	@Override
+	public String type() {
+		return "Diamond";
+	}
+	@Override
+	public int getCell() {
+		// TODO Auto-generated method stub
+		return a;
 	}
 }

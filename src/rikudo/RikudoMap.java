@@ -1,5 +1,6 @@
 package rikudo;
 
+import Image.BinaryImage;
 import Image.ColoredPolygon;
 import Image.ColoredSegment;
 import Image.Image2d;
@@ -23,10 +24,138 @@ public class RikudoMap {
 	private boolean flag;
 	private int sideLength;
 	private int numberOfSolutionsFound;
+	private int[][] solutionsFound;
 	private boolean[] hash;
 	LinkedList<Constraint> constraintList = new LinkedList<Constraint>();
 	RikudoMap(int sideLength){
 		this.sideLength = sideLength;
+	}
+	public int[] imagePosition(int x,int y,int resolution){
+		int[] position = new int[2];
+		double yp = resolution*0.866;
+		position[1] = (3*x/2+1)*resolution;
+		position[0] = Math.toIntExact(Math.round(2*y*yp+((y+1)%2)*yp));
+		return position;
+	}
+	public boolean calculateCoverage(int x,int y,int resolution,BinaryImage img){
+		int[] position = imagePosition(x,y,resolution);
+		int white=0;
+		int black=0;
+		int all=0;
+		for(int i=0;i<resolution;i++){
+			for(int j=0;j<resolution;j++){
+				if(position[0]+i-resolution/2<0||position[0]+i-resolution/2>=img.getHeight()){
+					continue;
+				}
+				if(position[1]+j-resolution/2<0||position[1]+j-resolution/2>=img.getWidth()) continue;
+				if(img.isBlack(position[0]+i-resolution/2, position[1]+j-resolution/2)==true){
+					black++;
+				}else{
+					white++;
+				}
+				all++;
+			}
+		}
+		if(1.0*black/all>=0.2){
+			return true;
+		}
+		return false;
+	}
+	public int getcellNumber(int[][] cellNumber,int x,int y){
+		if(x<0||x>=cellNumber.length||y<0||y>cellNumber[0].length){
+			return 0;
+		}else return cellNumber[x][y];
+	}
+	public void readImage(String path,int resolution){
+		BinaryImage img = new BinaryImage(path);
+		int h = img.getHeight();
+		int w = img.getWidth();
+		int hn = h/resolution/3*2+1;
+		int wn = Math.toIntExact(Math.round(w/resolution/0.866*2))+2;
+		boolean[][] cell = new boolean[hn+2][wn+2];
+		int[][] cellNumber = new int[hn+2][wn+2];
+		int count=0;
+		for(int i=1;i<=hn;i++){
+			for(int j=1;j<=wn;j++){
+				cell[i][j] = calculateCoverage(i-1,j-1,resolution,img);
+			}
+		}
+		boolean fflag = true;
+		while(true){
+			fflag = false;
+			for(int i=1;i<=hn;i++){
+				for(int j=1;j<=wn;j++){
+					int cc=0;
+					if(cell[i][j]==true){
+						if(i%2==0){
+							if(cell[i][j-1]==false) cc++;
+							if(cell[i-1][j]==false) cc++;
+							if(cell[i-1][j+1]==false) cc++;
+							if(cell[i][j+1]==false) cc++;
+							if(cell[i+1][j+1]==false) cc++;
+							if(cell[i+1][j]==false) cc++;
+						}else{
+							if(cell[i][j-1]==false) cc++;
+							if(cell[i-1][j-1]==false) cc++;
+							if(cell[i-1][j]==false) cc++;
+							if(cell[i][j+1]==false) cc++;
+							if(cell[i+1][j]==false) cc++;
+							if(cell[i+1][j-1]==false) cc++;
+						}
+						if(cc>=5){
+							cell[i][j]=false;
+							fflag = true;
+						}
+					}
+				}
+			}
+			if(fflag == false){
+				break;
+			}
+		}
+		count = 0;
+		for(int i=1;i<=hn;i++){
+			for(int j=1;j<=wn;j++){
+				if(cell[i][j]==true){
+					count++;
+					cellNumber[i][j]=count;
+				}
+			}
+		}
+		start = -1;
+		end = -1;
+		cellNumbers = count;
+        cellList = new Cell[cellNumbers+1];
+        checkPoints = new int[cellNumbers+1];
+        LabelConstraint.checkPoints = checkPoints;
+        LabelConstraint.cellList = cellList;
+        UNOConstraint.cellList = cellList;
+        PIConstraint.cellList = cellList;
+        DiamondConstraint.cellList = cellList;
+		for(int i=1;i<=hn;i++){
+			for(int j=1;j<=wn;j++){
+				int[] cc = new int[6];
+				if(cell[i][j]==true){
+					if(i%2==0){
+						cc[0] = getcellNumber(cellNumber,i,j-1);
+						cc[1] = getcellNumber(cellNumber,i-1,j);
+						cc[2] = getcellNumber(cellNumber,i-1,j+1);
+						cc[3] = getcellNumber(cellNumber,i,j+1);
+						cc[4] = getcellNumber(cellNumber,i+1,j+1);
+						cc[5] = getcellNumber(cellNumber,i+1,j);
+					}else{
+						cc[0] = getcellNumber(cellNumber,i,j-1);
+						cc[1] = getcellNumber(cellNumber,i-1,j-1);
+						cc[2] = getcellNumber(cellNumber,i-1,j);
+						cc[3] = getcellNumber(cellNumber,i,j+1);
+						cc[4] = getcellNumber(cellNumber,i+1,j);
+						cc[5] = getcellNumber(cellNumber,i+1,j-1);
+					}
+					cellList[cellNumber[i][j]]=new Cell(cellNumber[i][j],cc[0],cc[1],cc[2],cc[3],cc[4],cc[5]);
+				}
+			}
+		}
+		System.out.println(cellList.length);
 	}
 	public void readFile(String path){
         try {  
@@ -93,7 +222,7 @@ public class RikudoMap {
             UNOConstraint.cellList = cellList;
             for(int i=1;i<=n;i++){
             	str = reader.readLine();
-            	UNOConstraint uc = new UNOConstraint(Integer.parseInt(str));
+            	UNOConstraint uc = new UNOConstraint(Integer.parseInt(str),0);
             	constraintList.add(uc);
             	//cellList[Integer.parseInt(str)].setUNO();
             }
@@ -228,6 +357,7 @@ public class RikudoMap {
 		int step = 1;
 		flag = false;
 		numberOfSolutionsFound = 0;
+		solutionsFound = new int[2][cellNumbers];
 		DFS(step,trace,UNOList);
 		/*for(int i:trace){
 			System.out.print(i+" ");
@@ -235,32 +365,52 @@ public class RikudoMap {
 		if(numberOfSolutionsFound == 0){
 			System.out.println("No solution!");
 		}else if(numberOfSolutionsFound == 1){
-			System.out.println("1 solution found");
+			System.out.println("1 solution found:");
+			for(int i:solutionsFound[0]){
+				System.out.print(i+" ");
+			}System.out.println();
 		}else{
-			System.out.println("At least 2 solutions");
+			System.out.println("At least 2 solutions:");
+			for(int i:solutionsFound[0]){
+				System.out.print(i+" ");
+			}System.out.println();
+			for(int i:solutionsFound[1]){
+				System.out.print(i+" ");
+			}System.out.println();
 		}
 	}
 	public void DFS(int step,int[] trace,java.util.LinkedList<Integer> UNOList){
+		
 		if(flag ==true){
 			return;
 		}
 		if(trace[step]==innerEnd && step == cellNumbers){
 			if(numberOfSolutionsFound==0){
-				this.printMap(sideLength);
+				//this.printMap(sideLength/2);
 				numberOfSolutionsFound++;
+				solutionsFound[0] = trace.clone();
+				for(int i:trace){
+					System.out.print(i+" ");
+				}
+				System.out.println();
 			}else{
 				flag = true;
 				numberOfSolutionsFound++;
-				this.printMap(sideLength);
+				solutionsFound[1] = trace.clone();
+				//this.printMap(sideLength/2);
+				for(int i:trace){
+					System.out.print(i+" ");
+				}
+				System.out.println();
 			}
-			
 			return;
 		}
 		if(checkStatus(trace,step)==false){
+			/*
 			for(int i:trace){
 				System.out.print(i+" ");
 			}
-			System.out.println();
+			System.out.println();*/
 			return;
 		}else{
 			Cell c = cellList[trace[step]];
@@ -309,6 +459,9 @@ public class RikudoMap {
 				}
 			}
 		}
+		if(BFS(step,trace)==false){
+			return false;
+		}
 		return true;
 	}
 	public static int[] createRandomSeries(int[] n,Random random){
@@ -334,7 +487,15 @@ public class RikudoMap {
 		CDFS(series,step,start,random);
 		for(int i:series){
 			System.out.print(i+" ");
+		}System.out.println();
+		for(int i=1;i<=cellNumbers;i++){
+			cellList[series[i]].setLabel(i);
 		}
+		printMap(40);
+		for(int i=1;i<=cellNumbers;i++){
+			cellList[series[i]].unsetLabel();
+		}
+		createConstraints(series);
 		
 	}
 	public void CDFS(int[] series,int step, int cell,Random random){
@@ -367,9 +528,6 @@ public class RikudoMap {
 		}
 	}
 	private boolean CBFS(int step,int start){
-		if(step == cellNumbers-1){
-			step = step;
-		}
 		boolean[] BFShash = hash.clone();
 		LinkedList<Integer> queue = new LinkedList<Integer>();
 		queue.add(start);
@@ -390,5 +548,218 @@ public class RikudoMap {
 			return true;
 		else
 			return false;
+	}
+	private boolean BFS(int step,int[] trace){
+		boolean[] BFShash = new boolean[cellNumbers+1];
+		int cstart = trace[step];
+		for(int i=1;i<=step;i++){
+			BFShash[trace[i]]=true;
+		}
+		LinkedList<Integer> queue = new LinkedList<Integer>();
+		queue.add(cstart);
+		while(queue.isEmpty()==false){
+			int c = queue.pop();
+			int[] nearbyCells = cellList[c].getNearbyCells();
+			for(int i:nearbyCells){
+				if(BFShash[i]==false&&i!=0){
+					BFShash[i]=true;
+					queue.add(i);
+					step++;
+				}
+			}
+		}
+		if(step==cellNumbers)
+			return true;
+		else
+			return false;
+	}
+	public int prune(){
+		int ans = 0;
+		LinkedList<Constraint> clist = new LinkedList<Constraint>();
+		for(Constraint c:constraintList){
+			for(int i=1;i<=cellNumbers;i++){
+				cellList[i].initial();
+			}
+			for(Constraint cc:constraintList){
+				cc.set();
+			}
+			for(Constraint cc:clist){
+				cc.unset();
+			}
+			c.unset();
+			int[] trace = new int[cellNumbers+1];
+			java.util.LinkedList<Integer> UNOList = new LinkedList<Integer>();
+			trace[1] = innerStart;
+			int step = 1;
+			flag = false;
+			numberOfSolutionsFound = 0;
+			solutionsFound = new int[2][cellNumbers+1];
+			cellList[innerStart].setLabel(1);
+			cellList[innerEnd].setLabel(cellNumbers);
+			DFS(step,trace,UNOList);
+			if(numberOfSolutionsFound==2){
+				c.set();
+				ans++;
+				continue;
+			}else if (numberOfSolutionsFound==0){
+				System.out.println("Error");
+			}
+			clist.add(c);
+		}
+		return ans;
+	}
+	public void createConstraints(int[] series){
+		this.innerStart = series[1];
+		this.innerEnd = series[cellNumbers];
+		this.start = 1;
+		this.end = cellNumbers;
+		solutionsFound = new int[2][cellNumbers+1];
+		constraintList = new LinkedList<Constraint>();
+		for(int i=0;i<cellNumbers/5;i++){
+			Constraint constraint = addNewConstraint(series);
+			constraintList.add(constraint);
+		}
+		while(true){
+			int[] trace = new int[cellNumbers+1];
+			java.util.LinkedList<Integer> UNOList = new LinkedList<Integer>();
+			trace[1] = innerStart;
+			int step = 1;
+			flag = false;
+			numberOfSolutionsFound = 0;
+			solutionsFound = new int[2][cellNumbers+1];
+			for(int i=1;i<=cellNumbers;i++){
+				cellList[i].initial();
+			}
+			for(Constraint c:constraintList){
+				c.set();
+			}
+			cellList[innerStart].setLabel(1);
+			cellList[innerEnd].setLabel(cellNumbers);
+			//this.printMap(20);
+			DFS(step,trace,UNOList);
+			if(numberOfSolutionsFound==2){
+				Constraint constraint = addNewConstraint(series);
+				constraintList.add(constraint);
+				constraint.set();
+				System.out.println("2 solutions found");
+			}
+			else if(numberOfSolutionsFound==1){
+				System.out.println("1 solution found:"+constraintList.size());
+				this.printMap(20);
+				int ans = prune();
+				this.printMap(30);
+				System.out.println("1 solution pruned:"+ans);
+				break;
+			}else if(constraintList.isEmpty()==true){
+				System.out.println("Can't create an available constraints' list for this series");
+			}else{
+				System.out.println("No Solution");
+				this.printMap(20);
+				for(Constraint c:constraintList){
+					if(c.type().equals("PI")){
+						System.out.println(c.getCell());
+					}
+				}
+				DFS(step,trace,UNOList);
+				break;
+				
+			}
+		}
+		
+	}
+	//random an available constraint;
+	public Constraint addNewConstraint(int[] series){
+		//First we want to know where to create a new constraint;
+		/*
+		int starter=0;
+		int ender=0;
+		for(int i=1;i<=cellNumbers;i++){
+			if(series[i]!=solutionsFound[0][i]){
+				starter=i;
+				break;
+			}
+		}
+		for(int i=cellNumbers;i>=1;i--){
+			if(series[i]!=solutionsFound[0][i]){
+				ender=i;
+				break;
+			}
+		}
+		if(starter==0){//In case the first solution found is series itself
+			for(int i=1;i<=cellNumbers;i++){
+				if(series[i]!=solutionsFound[1][i]){
+					starter=i;
+					break;
+				}
+			}
+		}
+		if(ender==0){
+			for(int i=cellNumbers;i>=1;i--){
+				if(series[i]!=solutionsFound[1][i]){
+					ender=i;
+					break;
+				}
+			}
+		}*/
+		int[] difference = new int[cellNumbers+1];
+		int diffNumber = 0;
+		for(int i=1;i<cellNumbers;i++){
+			if(series[i]!=solutionsFound[0][i]){
+				difference[diffNumber]=i;
+				diffNumber++;
+			}
+		}
+		if(diffNumber==0){
+			for(int i=1;i<cellNumbers;i++){
+				if(series[i]!=solutionsFound[1][i]){
+					difference[diffNumber]=i;
+					diffNumber++;
+				}
+			}
+		}
+		//Then we random a point to create a constraint
+		Random rand = new Random();
+		int cellNumber;
+		boolean[] h = new boolean[cellNumbers+1];
+		for(Constraint c: constraintList){
+			h[c.getCell()] = true;
+		}
+		int a = rand.nextInt(diffNumber);
+		while(h[series[difference[a%diffNumber]]]==true) a++;
+		cellNumber = difference[a%diffNumber];
+		for(Constraint c: constraintList){
+			if(series[cellNumber]==c.getCell()){
+				System.out.println("error!");
+			}
+		}
+		//Finally we random a constraint
+		a = rand.nextInt(4);
+		Constraint c;
+		if(a==0){
+			c = new LabelConstraint(series[cellNumber],cellNumber);
+		}else if(a==1){
+			c = new DiamondConstraint(series[cellNumber],series[cellNumber+1]);
+		}else if(a==2){
+			c = new PIConstraint(series[cellNumber],cellNumber%2==0?PI.PAIR:PI.IMPAIR);
+		}else{
+			for(Constraint cc:constraintList){
+				if(cc.type().equals("UNO")){
+					UNOConstraint ccc = (UNOConstraint)cc;
+					int yu = ccc.getYu();
+					for(int i=cellNumber;i<cellNumbers;i++){
+						if(i%10==yu&&cellList[series[i]].haveConstraint()==false){
+							c = new UNOConstraint(series[i],yu);
+							return c;
+						}
+					}
+					c = new LabelConstraint(series[cellNumber],cellNumber);
+					return c;
+				}
+			}
+			c = new UNOConstraint(series[cellNumber],cellNumber%10);
+			return c;
+		}
+		return c;
+		
 	}
 }

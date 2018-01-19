@@ -14,12 +14,22 @@ public class Main {
 		// TODO Auto-generated method stub
 		RikudoMap rm = new RikudoMap(sideLength);
 		
-		rm.readFile(path);
+		rm.readImage("resource/bowtie.png", 15);
+		rm.checkMapAvailability();
+		rm.printMap(sideLength/2);
 		rm.createPuzzle();
-		//rm.applyConstraints();
 		rm.printMap(sideLength);
+
 		/*
+		rm.readFile(path);
 		
+		
+		rm.createPuzzle();
+		
+		rm.printMap(sideLength);
+
+		/*
+		rm.applyConstraints();
 		rm.printMap(sideLength);
 		rm.checkMapAvailability();
 		rm.backtracking();*/

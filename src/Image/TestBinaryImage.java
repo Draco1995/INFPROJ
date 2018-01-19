@@ -1,4 +1,4 @@
-
+package Image;
 public class TestBinaryImage {
 	public static void main(String[] args) {
 		// creating an image

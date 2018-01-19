@@ -30,15 +30,20 @@ public class Cell {
 	private final int number;
 	//the number of available edges;
 	private int availableEdges;
+	//The list of diamonds
 	private int[] diamond = new int[2];
 	private int diamondNumbers = 0;
 	private int diamondNumbersMax = 0;
+	//For printing
 	private static int paintAjustX = 0;
 	private static int paintAjustY = 0;
 	private int positionX = 0;
 	private int positionY = 0;
+	//if the cell have been passed
 	private boolean passFlag = false;
+	//If this Cell have a UNO constraint
 	private boolean flagUNO = false;
+	//If this Cell have a PI constraint
 	private PI flagPI;
 	Cell(int number,int left,int upperLeft,int upperRight,int right,int lowerRight,int lowerLeft, int label){
 		i_number++;
@@ -69,6 +74,24 @@ public class Cell {
 		this(number,left,upperLeft,upperRight,right,lowerRight,lowerLeft, 0);
 
 	}
+	public void initial(){
+		passFlag = false;
+		flagUNO = false;
+		flagPI = PI.OFF;
+		label = 0;
+		display = false;
+		diamond = new int[2];
+		diamondNumbers = 0;
+		diamondNumbersMax = 0;
+	}
+	public boolean haveConstraint(){
+		if(flagUNO==true||label!=0||flagPI!=PI.OFF||diamondNumbersMax!=0){
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
 	public void setLabel(int label){
 		this.label = label;
 		display = true;
@@ -78,9 +101,14 @@ public class Cell {
 		display = false;
 	}
 	public void connect(int number){
+		try{
 		diamond[diamondNumbers] = number;
 		diamondNumbers++;
 		diamondNumbersMax = diamondNumbers;
+		}catch(Exception e){
+			System.out.println(diamondNumbers);
+		}
+		
 	}
 	public void disconnect(int number){
 		if(diamondNumbers == 2){
