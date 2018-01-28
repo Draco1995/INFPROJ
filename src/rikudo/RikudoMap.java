@@ -1,3 +1,6 @@
+/*
+ * RikudoMap Created by Xinzhi MU and Xiang CHEN
+ */
 package rikudo;
 
 import Image.BinaryImage;
@@ -5,6 +8,11 @@ import Image.ColoredPolygon;
 import Image.ColoredSegment;
 import Image.Image2d;
 import Image.Show;
+import org.sat4j.core.VecInt;
+import org.sat4j.minisat.SolverFactory;
+import org.sat4j.specs.ISolver;
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.TimeoutException;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -14,22 +22,31 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Random;
 public class RikudoMap {
+	//a list contains all the cells
 	private Cell[] cellList;
+	//the number of cells in the cellList
 	private int cellNumbers;
+	//the start point of path, always 1
 	private int start;
+	//the inner number of the start point(the order in the cellList)
 	private int innerStart;
+	//the end point of path
 	private int end;
+	//the inner number of the start point(the order in the cellList)
 	private int innerEnd;
+	//a list to store all the check points.
 	private int[] checkPoints;
 	private boolean flag;
 	private int sideLength;
 	private int numberOfSolutionsFound;
 	private int[][] solutionsFound;
 	private boolean[] hash;
+	// s list to store all the constraints
 	LinkedList<Constraint> constraintList = new LinkedList<Constraint>();
 	RikudoMap(int sideLength){
 		this.sideLength = sideLength;
 	}
+	//Functions to create a graph from picture
 	public int[] imagePosition(int x,int y,int resolution){
 		int[] position = new int[2];
 		double yp = resolution*0.866;
@@ -259,7 +276,9 @@ public class RikudoMap {
         	c.unset();
         }
 	}
-	public void checkMapAvailability(){
+	//a function to check if the map is well constructed, if not it will print the points with errors
+	public boolean checkMapAvailability(){
+		boolean flag = true;
 		for(Cell i :cellList){
 			if(i==null) continue;
 			int[] nb = i.getNearbyCells();
@@ -267,10 +286,13 @@ public class RikudoMap {
 				if(nb[j]==0)continue;
 				if((cellList[nb[j]].getNearbyCells())[(j+3)%6]!=i.getNumber()){
 					System.out.println(nb[j]+" "+i.getNumber());
+					flag = false;
 				}
 			}
 		}
+		return flag;
 	}
+	//To visualize the situation of RikudoMap, including the graph,constraints,labels, path, etc...
 	public void printMap(int sideLength){
 		/*
 		for(int i=0;i<cellNumbers;i++){
@@ -287,6 +309,7 @@ public class RikudoMap {
 		}
 		Show.show(img);
 	}
+	//Ajust the position of the cells for a better presentation
 	private void ajust(int sideLength){
 		boolean[] hash = new boolean[cellNumbers+1];
 		Cell[] queue = new Cell[cellNumbers+1];
@@ -350,7 +373,6 @@ public class RikudoMap {
 		}
 	}
 	public void backtracking(){
-		//java.util.LinkedList<Integer> queue = new LinkedList<Integer>();
 		int[] trace = new int[cellNumbers+1];
 		java.util.LinkedList<Integer> UNOList = new LinkedList<Integer>();
 		trace[1] = innerStart;
@@ -359,52 +381,59 @@ public class RikudoMap {
 		numberOfSolutionsFound = 0;
 		solutionsFound = new int[2][cellNumbers];
 		DFS(step,trace,UNOList);
-		/*for(int i:trace){
-			System.out.print(i+" ");
-		}*/
 		if(numberOfSolutionsFound == 0){
 			System.out.println("No solution!");
 		}else if(numberOfSolutionsFound == 1){
 			System.out.println("1 solution found:");
 			for(int i:solutionsFound[0]){
+				if(i==0)continue;
 				System.out.print(i+" ");
 			}System.out.println();
 		}else{
-			System.out.println("At least 2 solutions:");
+			System.out.println("At least 2 solutions");
+			System.out.print("First one:");
 			for(int i:solutionsFound[0]){
+				if(i==0)continue;
 				System.out.print(i+" ");
 			}System.out.println();
+			System.out.print("Second one:");
 			for(int i:solutionsFound[1]){
+				if(i==0)continue;
 				System.out.print(i+" ");
 			}System.out.println();
 		}
 	}
+	//Using a depth-first-search to implement backtracking algorithm, at most two solutions will be found and store in solutionsFound.
 	public void DFS(int step,int[] trace,java.util.LinkedList<Integer> UNOList){
-		
 		if(flag ==true){
 			return;
 		}
+		//if we are at the final point
 		if(trace[step]==innerEnd && step == cellNumbers){
 			if(numberOfSolutionsFound==0){
-				//this.printMap(sideLength/2);
 				numberOfSolutionsFound++;
 				solutionsFound[0] = trace.clone();
+				/*
+				System.out.print("One solution found: ");
 				for(int i:trace){
 					System.out.print(i+" ");
 				}
-				System.out.println();
+				System.out.println();*/
 			}else{
 				flag = true;
 				numberOfSolutionsFound++;
 				solutionsFound[1] = trace.clone();
 				//this.printMap(sideLength/2);
+				/*
+				System.out.print("Second solution found: ");
 				for(int i:trace){
 					System.out.print(i+" ");
 				}
-				System.out.println();
+				System.out.println();*/
 			}
 			return;
 		}
+		//if the status of the Map is still worthy for the search
 		if(checkStatus(trace,step)==false){
 			/*
 			for(int i:trace){
@@ -438,6 +467,7 @@ public class RikudoMap {
 			}
 		}
 	}
+	//check the status of the Map
 	public boolean checkStatus(int[] trace,int step){
 		//check if this step is given, if it is, check if we are on the right place
 		if(checkPoints[step]!=0){
@@ -459,6 +489,7 @@ public class RikudoMap {
 				}
 			}
 		}
+		//Check if there are more than one isolate parts
 		if(BFS(step,trace)==false){
 			return false;
 		}
@@ -475,7 +506,9 @@ public class RikudoMap {
 		}
 		return n;
 	}
+	//To create a puzzle
 	public void createPuzzle(){
+		//Start to create random answer.
 		Random random = new Random();
 		int[] series = new int[cellNumbers+1];
 		int start = random.nextInt(cellNumbers)+1;
@@ -485,6 +518,7 @@ public class RikudoMap {
 		hash = new boolean[cellNumbers+1];
 		hash[start] = true;
 		CDFS(series,step,start,random);
+		System.out.print("One answer created: ");
 		for(int i:series){
 			System.out.print(i+" ");
 		}System.out.println();
@@ -495,13 +529,13 @@ public class RikudoMap {
 		for(int i=1;i<=cellNumbers;i++){
 			cellList[series[i]].unsetLabel();
 		}
+		System.out.println("Start creating constraints");
+		//To create constraints
 		createConstraints(series);
 		
 	}
+	//another version of DFS for the creation of the puzzle.
 	public void CDFS(int[] series,int step, int cell,Random random){
-		/*for(int i:series){
-			System.out.print(i+" ");
-		}System.out.println();*/
 		if(flag == true){
 			return;
 		}else if(step==cellNumbers){
@@ -527,6 +561,7 @@ public class RikudoMap {
 			}
 		}
 	}
+	//another version of BFS for the creation of the puzzle.
 	private boolean CBFS(int step,int start){
 		boolean[] BFShash = hash.clone();
 		LinkedList<Integer> queue = new LinkedList<Integer>();
@@ -549,6 +584,7 @@ public class RikudoMap {
 		else
 			return false;
 	}
+	//Check if there are more than one isolate parts
 	private boolean BFS(int step,int[] trace){
 		boolean[] BFShash = new boolean[cellNumbers+1];
 		int cstart = trace[step];
@@ -573,6 +609,7 @@ public class RikudoMap {
 		else
 			return false;
 	}
+	//a function to prune the constraints
 	public int prune(){
 		int ans = 0;
 		LinkedList<Constraint> clist = new LinkedList<Constraint>();
@@ -615,10 +652,11 @@ public class RikudoMap {
 		this.end = cellNumbers;
 		solutionsFound = new int[2][cellNumbers+1];
 		constraintList = new LinkedList<Constraint>();
-		for(int i=0;i<cellNumbers/5;i++){
+		for(int i=0;i<cellNumbers/5;i++){ //randomly create several constraint to accelerate the programme.
 			Constraint constraint = addNewConstraint(series);
 			constraintList.add(constraint);
 		}
+		//Continually create new constraint till we find only one solution.
 		while(true){
 			int[] trace = new int[cellNumbers+1];
 			java.util.LinkedList<Integer> UNOList = new LinkedList<Integer>();
@@ -635,26 +673,26 @@ public class RikudoMap {
 			}
 			cellList[innerStart].setLabel(1);
 			cellList[innerEnd].setLabel(cellNumbers);
-			//this.printMap(20);
 			DFS(step,trace,UNOList);
 			if(numberOfSolutionsFound==2){
 				Constraint constraint = addNewConstraint(series);
 				constraintList.add(constraint);
 				constraint.set();
-				System.out.println("2 solutions found");
+				System.out.println("2 solutions found with current constraints, new one added");
 			}
 			else if(numberOfSolutionsFound==1){
-				System.out.println("1 solution found:"+constraintList.size());
-				this.printMap(20);
+				System.out.println("1 solution found  with current constraints the size of constraints:"+constraintList.size());
+				this.printMap(sideLength);
+				System.out.println("Start pruning the constraints");
 				int ans = prune();
-				this.printMap(30);
-				System.out.println("1 solution pruned:"+ans);
+				this.printMap(sideLength);
+				System.out.println("solution pruned, "+ans+" constraints left");
 				break;
 			}else if(constraintList.isEmpty()==true){
 				System.out.println("Can't create an available constraints' list for this series");
 			}else{
 				System.out.println("No Solution");
-				this.printMap(20);
+				this.printMap(sideLength);
 				for(Constraint c:constraintList){
 					if(c.type().equals("PI")){
 						System.out.println(c.getCell());
@@ -725,7 +763,12 @@ public class RikudoMap {
 			h[c.getCell()] = true;
 		}
 		int a = rand.nextInt(diffNumber);
-		while(h[series[difference[a%diffNumber]]]==true) a++;
+		try{
+			while(h[series[difference[a%diffNumber]]]==true) a++;
+		}catch(Exception e){
+			e.printStackTrace();
+			this.printMap(30);
+		}
 		cellNumber = difference[a%diffNumber];
 		for(Constraint c: constraintList){
 			if(series[cellNumber]==c.getCell()){
@@ -761,5 +804,232 @@ public class RikudoMap {
 		}
 		return c;
 		
+	}
+	public void task4(){
+	 	int[] trace = new int[cellNumbers+1];
+		java.util.LinkedList<Integer> UNOList = new LinkedList<Integer>();
+		trace[1] = innerStart;
+		int step = 1;
+		flag = false;
+		numberOfSolutionsFound = 0;
+		solutionsFound = new int[2][cellNumbers];
+		DFS(step,trace,UNOList);
+		int[] series = solutionsFound[0];
+		this.innerStart = series[1];
+		this.innerEnd = series[cellNumbers];
+		this.start = 1;
+		this.end = cellNumbers;
+		solutionsFound = new int[2][cellNumbers+1];
+		while(true){
+			trace = new int[cellNumbers+1];
+			UNOList = new LinkedList<Integer>();
+			trace[1] = innerStart;
+			step = 1;
+			flag = false;
+			numberOfSolutionsFound = 0;
+			solutionsFound = new int[2][cellNumbers+1];
+			for(int i=1;i<=cellNumbers;i++){
+				cellList[i].initial();
+			}
+			for(Constraint c:constraintList){
+				c.set();
+			}
+			cellList[innerStart].setLabel(1);
+			cellList[innerEnd].setLabel(cellNumbers);
+			//this.printMap(20);
+			DFS(step,trace,UNOList);
+			if(numberOfSolutionsFound==2){
+				Constraint constraint = addNewConstraint(series);
+				constraintList.add(constraint);
+				constraint.set();
+				System.out.println("2 solutions found");
+			}
+			else if(numberOfSolutionsFound==1){
+				System.out.println("1 solution found:"+constraintList.size());
+				this.printMap(20);
+				int ans = prune();
+				this.printMap(30);
+				System.out.println("1 solution pruned:"+ans);
+				break;
+			}else if(constraintList.isEmpty()==true){
+				System.out.println("Can't create an available constraints' list for this series");
+			}else{
+				System.out.println("No Solution");
+				this.printMap(20);
+				for(Constraint c:constraintList){
+					if(c.type().equals("PI")){
+						System.out.println(c.getCell());
+					}
+				}
+				DFS(step,trace,UNOList);
+				break;
+				
+			}
+		}
+	}
+	public void SAT(){
+		int n = this.cellNumbers;
+		ISolver solver = SolverFactory.newDefault();
+		try {
+			//each vertex appears once
+			int[] Clause1 = new int[n];
+			for (int i = 1; i <= n; i++){				
+				for (int j = 0; j < n; j++){
+					Clause1[j] = i*n+j+1;
+				}
+				solver.addClause(new VecInt(Clause1));
+			}
+			
+			for (int i = 1; i <= n; i++){
+				for (int j = 1; j <= n; j++){
+					for (int k = j+1; k <= n; k++){
+						solver.addClause(new VecInt(new int[] {-(i*n+j),-(i*n+k)}));
+					}
+				}
+			}
+			
+			//each index is occupied once
+			int[] Clause2 = new int[n];
+			for (int i = 1; i <= n; i++){				
+				for (int j = 0; j < n; j++){
+					Clause2[j] = (j+1)*n+i;
+				}
+				solver.addClause(new VecInt(Clause2));
+			}
+			for (int i = 1; i <= n; i++){
+				for (int j = 1; j <= n; j++){
+					for (int k = j+1; k <= n; k++){
+						solver.addClause(new VecInt(new int[] {-(j*n+i),-(k*n+i)}));
+					}
+				}
+			}
+			
+			//cells with labels
+			for (int i = 1; i <= n ; i++){
+				Cell c = cellList[i];
+				if (c.getLabel()>0){
+					solver.addClause(new VecInt(new int[] {(i*n+c.getLabel())}));
+				}
+			}
+			
+			//consecutive vertices are adjacent
+			for (int i = 1; i <= n; i++){
+				Cell c = cellList[i];
+				int[] Near = c.getNearbyCells();
+			Loop:
+				for (int j = 1; j<=n; j++){
+					for (int k = 0; k<6; k++){
+						if (j==Near[k]){
+							continue Loop;
+						}
+					}
+					for (int l = 1; l <=n; l++){
+						solver.addClause(new VecInt(new int[] {-(i*n+l),-(j*n+l+1)}));
+					}
+				}
+			}
+			
+			//diamond
+			for (int i = 1; i <= n; i++){
+				Cell c = cellList[i];
+				int num = c.getDiamondNumbers();
+				if (num!=0){
+					for (int k = 0; k < num; k++){
+						int a = c.getDiamond()[k];
+						solver.addClause(new VecInt(new int[] {-(a*n+1),i*n+2}));
+						for (int j = 2; j < n; j++){
+							solver.addClause(new VecInt(new int[] {i*n+j-1,-(a*n+j),i*n+j+1}));
+						}
+						solver.addClause(new VecInt(new int[] {-(a*n+n),i*n+n-1}));
+					}
+				}
+				
+			}
+			
+			
+			//PI
+			for (Constraint c: constraintList){
+				if (c.type().equals("PI")){
+					PIConstraint pi = (PIConstraint)c;
+					PI valeur = pi.getValeur();
+					int cell = pi.getCell();
+					if (valeur==PI.PAIR){
+						int[] clause = new int[n/2];
+						for (int i=0; i<n/2; i++){
+							clause[i] = cell*n+2*(i+1);
+						}
+						solver.addClause(new VecInt(clause));
+					}
+					else{
+						int[] clause = new int[(n+1)/2];
+						for (int i = 0; i<(n+1)/2; i++){
+							clause[i] = cell*n+2*i+1;
+						}
+						solver.addClause(new VecInt(clause));
+					}
+				}
+			}
+			
+			//UNO
+			LinkedList<Integer> UNO = new LinkedList<Integer>();
+			for (Constraint c: constraintList){				
+				if (c.type().equals("UNO")){
+					int cell = c.getCell();
+					UNO.add(cell);
+				}	
+			}
+			int Num;
+			if (!UNO.isEmpty()){
+				int cell1 = UNO.remove();			
+				for (int i = 1; i<=n; i++){
+					int u = i%10;
+					if (u<=n%10){Num = n/10+1;}
+					else{Num = n/10;}
+					for (int j:UNO){
+						int[] clause = new int[Num];
+						for (int k = 0; k<Num; k++){
+							if (k*10+u==i){
+								clause[k] = -(cell1*n+i);
+							}
+							else{
+								clause[k] = j*n+k*10+u;
+							}
+						}
+						solver.addClause(new VecInt(clause));
+						
+					}
+					
+				}
+			}
+		}catch (ContradictionException e1) {
+			e1.printStackTrace();
+		}
+		
+		try {
+			if (solver.isSatisfiable()) {
+				//System.out.println("Satisfiable problem!");
+				int[] solution = solver.model();
+				/*System.out.print("Solution: " + solution[0]);
+				for (int i = 1; i<n*n; i++){
+					System.out.print(" " + solution[i]);
+				}*/
+				int[] finalLabels = new int[n+1];
+				int counter = 0;
+				for (int i : solution){
+					if (i>0){
+						counter++;
+						finalLabels[counter] = i-counter*n;
+					}
+				}
+				for (int i = 1; i <=n; i++){
+					Cell c = cellList[i];
+					c.changeLabel(finalLabels[i]);
+				}
+			} else {
+				System.out.println("Unsatisfiable problem!");
+			}
+		} catch (TimeoutException e) {
+			System.out.println("Timeout, sorry!");
+		}
 	}
 }

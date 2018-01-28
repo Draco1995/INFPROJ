@@ -92,6 +92,9 @@ public class Cell {
 			return false;
 		}
 	}
+	public void changeLabel(int label){
+		this.label = label;
+	}
 	public void setLabel(int label){
 		this.label = label;
 		display = true;

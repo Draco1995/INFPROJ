@@ -34,5 +34,8 @@ public class PIConstraint extends Constraint{
 		// TODO Auto-generated method stub
 		return cell;
 	}
-
+	
+	public PI getValeur(){
+		return pi;
+	}
 }
