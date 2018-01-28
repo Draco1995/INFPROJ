@@ -1,3 +1,6 @@
+/*
+ * The abstract class for LabelConstraint, UNOConstraint, PIConstraint,DiamondConstraint
+ */
 package rikudo;
 
 public abstract class Constraint {
