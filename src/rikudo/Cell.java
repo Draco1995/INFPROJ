@@ -1,21 +1,29 @@
-/*
- * The class Cell is used to construct the RikudoMap
- */
+
 package rikudo;
 
 import java.awt.Color;
 
 import Image.Image2d;
-
+/**
+ * 
+ * The class Cell is used to construct the RikudoMap
+ *
+ * @author MSI
+ *
+ */
 public class Cell {
-	//How many Cell instances;
+	/**
+	 * How many Cell instances;
+	 */
 	private static int i_number=0;
 	//The list of Cells;
 	//private static Cell[] cellList=new Cell[300];
-	//The label of this cell, 0 means not labelled;
+	/**
+	 * he label of this cell, 0 means not labelled;
+	 */
 	private int label=0;
-	//The nearby cells' inner number, 0 means empty;
-	/*
+	/**
+	 * The nearby cells' inner number, 0 means empty;
 	 * 0 left
 	 * 1 upperLeft
 	 * 2 upperRight
@@ -24,26 +32,42 @@ public class Cell {
 	 * 5 lowerLeft
 	 */
 	private int[] nearbyCells = new int[6];
-	//If the cell's label has been given;
+	/**
+	 * If the cell's label has been given;
+	 */
 	private boolean display;
-	//Inner number label;
+	/**
+	 * Inner number label;
+	 */
 	private final int number;
-	//the number of available edges;
+	/**
+	 * the number of available edges;
+	 */
 	private int availableEdges;
-	//The list of diamonds
+	/**
+	 * The list of diamonds
+	 */
 	private int[] diamond = new int[2];
 	private int diamondNumbers = 0;
 	private int diamondNumbersMax = 0;
-	//For printing
+	/**
+	 * For printing
+	 */
 	private static int paintAjustX = 0;
 	private static int paintAjustY = 0;
 	private int positionX = 0;
 	private int positionY = 0;
-	//if the cell have been passed
+	/**
+	 * if the cell have been passed
+	 */
 	private boolean passFlag = false;
-	//If this Cell have a UNO constraint
+	/**
+	 * If this Cell have a UNO constraint
+	 */
 	private boolean flagUNO = false;
-	//If this Cell have a PI constraint
+	/**
+	 * If this Cell have a PI constraint
+	 */
 	private PI flagPI;
 	Cell(int number,int left,int upperLeft,int upperRight,int right,int lowerRight,int lowerLeft, int label){
 		i_number++;
@@ -104,21 +128,41 @@ public class Cell {
 		display = false;
 	}
 	public void connect(int number){
+		boolean f = false;
+		for(int i = 0;i<diamondNumbersMax;i++){
+			if(diamond[i]==number){
+				f = true;
+				break;
+			}
+		}
+		if(f==true){
+			return;
+		}
 		try{
-		diamond[diamondNumbers] = number;
-		diamondNumbers++;
-		diamondNumbersMax = diamondNumbers;
+		diamond[diamondNumbersMax] = number;
+		diamondNumbersMax++;
+		diamondNumbers = diamondNumbersMax;
 		}catch(Exception e){
 			System.out.println(diamondNumbers);
 		}
 		
 	}
 	public void disconnect(int number){
-		if(diamondNumbers == 2){
+		boolean f = false;
+		for(int i = 0;i<diamondNumbersMax;i++){
+			if(diamond[i]==number){
+				f = true;
+				break;
+			}
+		}
+		if(f==false){
+			return;
+		}
+		if(diamondNumbersMax == 2){
 			if(diamond[0]==number){
 				diamond[0] = diamond[1];
 			}
-			diamondNumbers--;
+			diamondNumbers = 1;
 			diamondNumbersMax = 1;
 		}else{
 			diamondNumbers = 0;
@@ -130,7 +174,11 @@ public class Cell {
 		return diamondNumbers;
 	}
 	public int[] getDiamond(){
-		return diamond;
+		int[] diamond2 = new int[diamondNumbersMax];
+		for(int i = 0;i<diamondNumbersMax;i++){
+			diamond2[i] = diamond[i];
+		}
+		return diamond2;
 	}
 	public int[] getNearbyCells(){
 		return nearbyCells;
@@ -277,7 +325,14 @@ public class Cell {
 	public int getLabel(){
 		return label;
 	}
-	//Check if this cell is available
+	/**
+	 * Check if this cell is available
+	 * @param step
+	 * @param previousCell
+	 * @param UNOList
+	 * @param cellList
+	 * @return
+	 */
 	public boolean check(int step,int previousCell,java.util.LinkedList<Integer> UNOList,Cell[] cellList){
 		step++;
 		//if passed before
@@ -318,8 +373,9 @@ public class Cell {
 	public void avance(int step,Cell[] cellList,java.util.LinkedList<Integer> UNOList){
 		passFlag = true;
 		label = step+1;
+		/*
 		if(diamondNumbers!=0)
-			diamondNumbers--;
+			diamondNumbers--;*/
 		for(int i:nearbyCells){
 			if(i==0) continue;
 			cellList[i].addAvailableEgde();
@@ -335,14 +391,31 @@ public class Cell {
 	public void minusAvailableEgde(){
 		availableEdges--;
 	}
+	
+	public void addDiamondNumbers(){
+		if(diamondNumbers<diamondNumbersMax){
+			diamondNumbers++;
+		}
+	}
+	
+	public void minusDiamondNumbers() throws Exception{
+		if(diamondNumbers==0){
+			
+			System.err.println("error diamondNumbers");
+			throw new Exception();
+		}else{
+			diamondNumbers--;
+		}
+	}
 	public void retreat(int step,Cell[] cellList,java.util.LinkedList<Integer> UNOList){
 		passFlag = false;
 		if(display==false){
 			label = 0;
 		}
+		/*
 		if(diamondNumbers<diamondNumbersMax){
 			diamondNumbers++;
-		}
+		}*/
 		for(int i:nearbyCells){
 			if(i==0) continue;
 			cellList[i].minusAvailableEgde();

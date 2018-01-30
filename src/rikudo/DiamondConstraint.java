@@ -30,4 +30,8 @@ public class DiamondConstraint extends Constraint{
 		// TODO Auto-generated method stub
 		return a;
 	}
+	
+	public String toString(){
+		return ""+a+" "+b+ " " + status;
+	}
 }

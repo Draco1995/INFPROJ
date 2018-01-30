@@ -1,6 +1,6 @@
-/*
+/**
  * Info project:rikudo
- * Author: Xinzhi MU, Xiang Chen
+ * @author Xinzhi MU, Xiangchen
  * 
  */
 
@@ -15,9 +15,9 @@ public class Rikudo {
 		System.out.println("Rikudo v1.0, created by Xinzhi Mu and Xiang Chen");
 		System.out.println(
 				"Usage:\n"
-				+"java Rikudo -s -i <graph_path> -m <SATsolver|backtracking> [-l output_length] 			: Solve a rikudo problem from file system, two methods available\n"
-				+"java Rikudo -cg -i <graph_path> [-l output_length] 						: Create a puzzle from a graph\n"
-				+"java Rikudo -cp -i <picture_path> [-r resolution] [-l output_length]				: Create a puzzle form a picture with certain resulution\n"
+				+"java Rikudo -s -i <graph_path> -m <SATsolver|backtracking> [-l <output_length>] 			: Solve a rikudo problem from file system, two methods available\n"
+				+"java Rikudo -cg -i <graph_path> [-l <output_length>] 						: Create a puzzle from a graph\n"
+				+"java Rikudo -cp -i <picture_path> [-r <resolution>] [-l <output_length>]				: Create a puzzle form a picture with certain resulution\n"
 				+"\n"
 				+"Example:\n"
 				+"java Rikudo -s -i resource/b.txt -m SATsolver\n"
